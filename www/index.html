@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+    <link rel="stylesheet" type="text/css" href="css/index.css" />
+    <link rel="stylesheet" type="text/css" href="css/jquery.mobile-1.4.2.css" />
+    <script type="text/javascript" src="js/index.js"></script>
+    <script src=http://maps.googleapis.com/maps/api/js?libraries=geometry&sensor=false></script>
+    <script type="text/javascript" src="js/jquery-1.9.1.js"></script>
+    <script type="text/javascript" src="js/jquery.mobile-1.4.2.js"></script>
+    <!--<script type="text/javascript" src="cordova.js"></script>-->
+
+    <style type="text/css">
+        #bar {
+            background: url("img/cupcake.png") no-repeat;
+            /*background: url("img/sliceBarImg.png") no-repeat;*/
+            background-size: 400px 115px;
+            background-size: 329px 115px;
+            /*background-size: 74px 69px;*/
+            height: 115px;
+            /*width: 400px;*/
+            width: 329px;
+            margin: -10px auto 0;
+        }
+
+        #addressContainer {
+            padding-top: 15px;
+            padding-bottom: 15px;
+            /*width: 200px;*/
+            /*margin: 0 auto 0;*/
+            text-shadow:none;
+            font-family:"Helvetica Neue", Arial, Verdana, sans-serif;
+        }
+
+        .sHeading {
+            font-size: 16px;
+            font-family:"Helvetica Neue", Arial, Verdana, sans-serif;
+        }
+
+        .shr2 {
+            border: 0;
+            height: 1px;
+            background-image: -webkit-linear-gradient(left, #88c1d8, #88c1d8, rgba(0,0,0,0));
+            background-image:    -moz-linear-gradient(left, #88c1d8, #88c1d8, rgba(0,0,0,0));
+            background-image:     -ms-linear-gradient(left, #88c1d8, #88c1d8, rgba(0,0,0,0));
+            background-image:      -o-linear-gradient(left, #88c1d8, #88c1d8, rgba(0,0,0,0));
+        }
+
+        .shr3 {
+            border: 0;
+            height: 1px;
+            background-image: -webkit-linear-gradient(left, rgba(0,0,0,0), #88c1d8, #88c1d8);
+            background-image:    -moz-linear-gradient(left, rgba(0,0,0,0), #88c1d8, #88c1d8);
+            background-image:     -ms-linear-gradient(left, rgba(0,0,0,0), #88c1d8, #88c1d8);
+            background-image:      -o-linear-gradient(left, rgba(0,0,0,0), #88c1d8, #88c1d8);
+        }
+
+        #imgContainer {
+            padding-top: 40px;
+            width: 200px;
+            margin: 0 auto 0;
+        }
+
+        #locationBar {
+            height: 115px;
+        }
+        body {
+            text-transform: none;
+        }
+        .login {
+            border-bottom-style: none;
+            border-top-style: none;
+            /*background-color: #f9f9f9!important;*/
+            /*background-color: #505050!important;*/
+        }
+
+        hr {
+            border-top: 1px solid #88c1d8;
+        }
+
+        #loginBar {
+            height: 50px;
+        }
+    </style>
+    <script type="text/javascript">
+        $( document ).bind( "mobileinit", function() {
+            // Make your jQuery Mobile framework configuration changes here!
+            $.support.cors = true;
+            $.mobile.allowCrossDomainPages = true;
+        });
+
+//        setInterval(autoSignIn, 5000);
+
+        function autoSignIn() {
+            if(window.localStorage.getItem("signedIn") == "1") {
+                var url = 'http://127.0.0.1:8080/slicestudio/client/autoSignIn';
+//                var url = 'http://192.168.1.3:8080/slicestudio/client/autoSignIn';
+
+                var clientId = window.localStorage.getItem("clientId");
+                var lat = "79";
+                var lng = "6"
+
+                var autoSignIn = {"clientId" : clientId, "lat" : lat, "lng" : lng};
+
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    data: JSON.stringify(autoSignIn),
+                    contentType: "application/json",
+                    cache: false,
+                    crossDomain: true,
+                    async: false,
+                    headers: {
+                        Accept : 'application/text'
+                    },
+                    success: function(data) {
+                        if(data.toString() == "true") {
+
+                        }
+                    },
+                    error: function(xhr) {
+                        alert('Error!  Status = ' + xhr.status + " Message = " + xhr.statusText);
+                    }
+                });
+            }
+        }
+
+        function onLoad() {
+            var signedIn = window.localStorage.getItem("signedIn");
+            $('#homeHeader a').remove();
+            if(signedIn == "1") {
+                autoSignIn();
+//                $('<a href="#" class="ui-btn ui-corner-all ui-icon-user ui-btn-icon-notext ui-btn-left">User Icon</a>').insertBefore('#homeHeaderTxt');
+//                $('<a href="#" class="ui-btn ui-corner-all ui-icon-user ui-btn-icon-notext"></a>').insertBefore('#bar')
+                $('<a id="logoutHeaderBtn" data-role="button" data-iconshadow="false" data-shadow="false" class="ui-btn-right" onclick="logout()">Logout</a>').insertBefore('#homeHeaderTxt');
+            } else {
+//                $('<a href="#" class="ui-btn ui-corner-all ui-icon-user ui-btn-icon-notext ui-btn-left">User Icon</a>').insertBefore('#homeHeaderTxt');
+                $('<a id="loginHeaderBtn" href="#loginPage" data-role="button" data-iconshadow="false" data-shadow="false" class="ui-btn-right">Login</a>').insertBefore('#homeHeaderTxt');
+            }
+            $('#homePage').trigger('create');
+        }
+
+        function logout() {
+            window.localStorage.setItem("signedIn", "0");
+            $('#logoutHeaderBtn').remove();
+            $('<a id="loginHeaderBtn" href="#loginPage" data-role="button" data-iconshadow="false" data-shadow="false" class="ui-btn-right">Login</a>').insertBefore('#homeHeaderTxt');
+            $('#homePage').trigger('create');
+        }
+
+        $(document).ready(function(){
+
+//            $('#logoutHeaderBtn').click(function(){
+//                alert("logout clicked")
+//                $('#logoutHeaderBtn').remove();
+//                $('<a id="loginHeaderBtn" href="#loginPage" data-role="button" data-iconshadow="false" data-shadow="false" class="ui-btn-right">Logout</a>').insertBefore('#homeHeaderTxt');
+//                $('#homePage').trigger('create');
+//            });
+
+            $('#classesBtn').click(function(){
+                var url = 'http://127.0.0.1:8080/slicestudio/class/today';
+//                var url = 'http://192.168.1.3:8080/slicestudio/class/today';
+
+                $.ajax({
+                    type: 'GET',
+                    url: url,
+                    cache: false,
+                    crossDomain: true,
+                    async: false,
+                    headers: {
+                        Accept : 'application/xml'
+                    },
+                    success: function(data) {
+                        var classList = '<ul data-role="listview" id="classView" data-theme="" data-inset="true">';
+                        var trackDate = '';
+                        $(data).find('GetClassesResponse').
+                                find('GetClassesResult').
+                                find('Classes').
+                                find('Class').
+                                each(function() {
+                                    var date = $(this).children('StartDateTime').text().split('T');
+                                    if(trackDate != date[0]) {
+                                        trackDate = date[0];
+                                        classList = classList.concat('<li data-role="list-divider">'+ trackDate +'</li>');
+                                    }
+                                    var classDes = '<li>' +
+                                                        '<a href="#">' +
+                                                            '<h2>' + $(this).find('ClassDescription').children('Name').text() +'</h2>' +
+                                                            '<p class="ui-li-aside"><strong>'+ date[1] +'</strong></p>' +
+                                                        '</a>' +
+                                                    '</li>';
+                                    classList = classList.concat(classDes);
+                                });
+                        classList.concat('</ul>');
+                        $("div#scheduleContent").html(classList);
+                    },
+                    error: function(xhr) {
+                        alert('Error!  Status = ' + xhr.status + " Message = " + xhr.statusText);
+                    }
+                });
+                $.mobile.changePage($("#schedulePage"), { transition: "pop"})
+            });
+
+            $('#loginForm').submit(function() {
+                var vUsername = $('#username').val();
+                var vPassword = $('#password').val();
+
+//                var creds = {"username" : "155indiran@gmail.com", "password" : "Vinu@2415"};
+                var creds = {"username" : vUsername, "password" : vPassword};
+
+                var url = 'http://127.0.0.1:8080/slicestudio/client/validateLogin';
+//                var url = 'http://192.168.1.3:8080/slicestudio/client/validateLogin';
+
+//                $.ajax({
+//                    type: 'POST',
+//                    url: url,
+//                    data: JSON.stringify(creds),
+//                    contentType: "application/json",
+//                    cache: false,
+//                    crossDomain: true,
+//                    async: false,
+//                    headers: {
+//                        Accept : 'application/json'
+//                    },
+//                    success: function(data) {
+//                        if(data.success == true) {
+//                            window.localStorage.setItem("username", vUsername);
+//                            window.localStorage.setItem("password", vPassword);
+//                            window.localStorage.setItem("clientId", data.clientId);
+//                            window.localStorage.setItem("firstname", data.firstname);
+//                            window.localStorage.setItem("lastname", data.lastname);
+//                            window.localStorage.setItem("signedIn", "1");
+//                            $('#loginHeaderBtn').remove();
+//                            $('<a id="logoutHeaderBtn" data-role="button" data-iconshadow="false" data-shadow="false" class="ui-btn-right" onclick="logout()">Logout</a>').insertBefore('#homeHeaderTxt');
+//                            $('#homePage').trigger('create');
+//                            $.mobile.changePage($("#homePage"), { transition: "pop"});
+//                        }
+//                    },
+//                    error: function(xhr) {
+//                        alert('Error!  Status = ' + xhr.status + " Message = " + xhr.statusText);
+//                    }
+//                });
+                window.localStorage.setItem("username", vUsername);
+                window.localStorage.setItem("password", vPassword);
+                window.localStorage.setItem("clientId", "8964");
+                window.localStorage.setItem("firstname", "indu");
+                window.localStorage.setItem("lastname", "nada");
+                window.localStorage.setItem("signedIn", "1");
+                $('#loginHeaderBtn').remove();
+                $('<a id="logoutHeaderBtn" data-role="button" data-iconshadow="false" data-shadow="false" class="ui-btn-right" onclick="logout()">Logout</a>').insertBefore('#homeHeaderTxt');
+                $('#homePage').trigger('create');
+                $.mobile.changePage($("#homePage"), { transition: "pop"});
+                return false;
+            });
+        });
+
+//        $(document).on('pageshow', '#loginPage',function(e,data){
+//            $('#loginBar').height(getRealContentHeight()/2);
+//        });
+
+        $(document).on('pageshow', '#locationPage',function(e,data){
+            $('#locationBar').height(getRealContentHeight()/4);
+            $('#content').height(getRealContentHeight());
+            // This is the minimum zoom level that we'll allow
+            var minZoomLevel = 13;
+//                var myPosition = new google.maps.LatLng(lat, lng);
+            var myPosition = new google.maps.LatLng(6.854309, 79.864538);
+
+            var mapOptions = {
+                zoom: minZoomLevel,
+                center: myPosition,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            };
+
+            var map = new google.maps.Map(document.getElementById('map_canvas'), mapOptions);
+
+            var marker = new google.maps.Marker({
+                position: myPosition,
+                title: 'Clubville'
+            });
+
+            marker.setMap(map);
+        });
+
+        function getRealContentHeight() {
+            var header = $.mobile.activePage.find("div[data-role='header']:visible");
+            var footer = $.mobile.activePage.find("div[data-role='footer']:visible");
+            var content = $.mobile.activePage.find("div[data-role='content']:visible:visible");
+            var viewport_height = $(window).height();
+
+            var content_height = viewport_height - header.outerHeight() - footer.outerHeight();
+            if((content.outerHeight() - header.outerHeight() - footer.outerHeight()) <= viewport_height) {
+                content_height -= (content.outerHeight() - content.height());
+            }
+            return content_height;
+        }
+    </script>
+    <title>Hello World</title>
+</head>
+<body onload="onLoad()">
+
+<div data-role="page" id="homePage">
+    <div data-role="header" data-position="fixed" class="login" id="homeHeader" style="background-color: #F9F9F9">
+        <!--<div data-role="button" class="ui-btn-right">Login</div>-->
+        <!--<a id="loginHeaderBtn" href="#loginPage" data-iconshadow="false" data-shadow="false" data-role="button" class="ui-btn-right">Login</a>-->
+        <h2 id="homeHeaderTxt"></h2> <!-- purposely left blank  -->
+    </div>
+    <div data-role="content" id="homeContent">
+        <div id="bar">
+
+        </div>
+        <div style="padding-top: 20px;">
+            <span class="sHeading">LOCATION</span>
+        </div>
+        <hr class="shr2">
+        <ul data-role="listview" id="locationView" data-inset="true">
+            <!--<li data-role="list-divider">Location</li>-->
+            <li><a href="#locationPage">Parsons Green</a></li>
+        </ul>
+    </div>
+</div>
+
+<div data-role="page" id="loginPage" >
+    <div data-role="header" data-position="fixed">
+        <a href="#homePage" data-icon="home" data-iconshadow="false" data-shadow="false">Home</a>
+        <h2></h2>
+    </div>
+    <div data-role="content" id="loginContent">
+        <div id="loginBar">
+
+        </div>
+        <span class="sHeading">LOGIN</span>
+        <hr class="shr2">
+        <div>
+            <form id="loginForm">
+                <label for="username" class="ui-hidden-accessible">Username</label>
+                <input type="text" name="username" id="username" value="" placeholder="Username"/>
+
+                <label for="password" class="ui-hidden-accessible">Password</label>
+                <input type="text" name="password" id="password" value="" placeholder="Password"/>
+
+                <input type="submit" value="Login" id="loginButton"/>
+            </form>
+        </div>
+    </div>
+    <div data-role="footer" data-position="fixed">
+        (c) Ivees
+    </div>
+</div>
+
+<!--<div data-role="page" id="locationPage" style="background-color: #505050;">-->
+<div data-role="page" id="locationPage">
+    <div data-role="header" data-position="fixed">
+        <a href="#homePage" data-icon="back" data-iconshadow="false" data-shadow="false">Back</a>
+        <h2>Parsons Green</h2>
+    </div>
+    <div data-role="content" id="locationContent" >
+
+        <div id="locationBar">
+            <div id="map_canvas" style="height:100%"></div>
+        </div>
+        <div class="ui-corner-all">
+            <div id="addressContainer">
+                <span style="font-size: 16px; color: #ffaa14"> SLICE STUDIOS </span><br/>
+                <!--CUPCAKE FAMILY CLUB <br/>-->
+                <hr class="shr2">
+                <div id="address" style="padding-top: 5px; font-size: 12px;">
+                    11 Heathmans Road <br/>
+                    Parsons Green <br/>
+                    London SW6 4TJ <br/>
+                </div>
+                <hr class="shr2">
+                <div style="padding-top: 5px; font-size: 12px; text-align: left;">
+                    020 7186 6007 <br/>
+                    hello@slicefitness.co.uk
+                </div>
+                <!--<span id="contact">-->
+                <!--020 7186 6007 <br/>-->
+                <!--hello@slicefitness.co.uk-->
+                <!--</span>-->
+            </div>
+        </div>
+        <button id="classesBtn" class="ui-btn ui-corner-all ui-shadow">Classes</button>
+        <div class="ui-corner-all" style="margin-top: 15px; border: 1px solid #88c1d8; padding: 10px;">
+            <span style="font-size: 16px;">Step Inside ...</span> <br/>
+            <span style="font-size: 12px; color: #505050;">Slice is a healthy haven for Londoners with three modern studios plus luxurious showers and changing rooms to enhance the urban lifestyle.</span>
+        </div>
+        <!--<div class="ui-corner-all" style="background-color: #91D3F1">-->
+
+
+        <!--<div class="ui-grid-a">-->
+            <!--<div class="ui-block-a">-->
+                <!--<div id="imgContainer"><img src="img/slice.png" height="158" width="168"></div>-->
+            <!--</div>-->
+            <!--<div class="ui-block-b">-->
+                <!--<div id="addressContainer" style="color: #ffffff">-->
+                    <!--SLICE STUDIOS AND <br/>-->
+                    <!--CUPCAKE FAMILY CLUB <br/>-->
+                    <!--11 Heathmans Road <br/>-->
+                    <!--Parsons Green <br/>-->
+                    <!--London SW6 4TJ <br/>-->
+                    <!--020 7186 6007 <br/>-->
+                    <!--hello@slicefitness.co.uk-->
+                <!--</div>-->
+            <!--</div>-->
+        <!--</div>&lt;!&ndash; /grid-a &ndash;&gt;-->
+        <!--<button id="classesBtn" class="ui-btn ui-corner-all ui-shadow">Classes</button>-->
+    </div>
+    <!--<div data-role="footer" data-position="fixed">-->
+        <!--<div data-role="navbar">-->
+            <!--<ul>-->
+                <!--<li><a href="#" id="classesBtn">Classes</a></li>-->
+            <!--</ul>-->
+        <!--</div>-->
+    <!--</div>-->
+</div>
+
+<div data-role="page" id="schedulePage">
+    <div data-role="header" data-position="fixed">
+        <a href="#locationPage" data-icon="back" data-iconshadow="false" data-shadow="false">Back</a>
+        <a href="#homePage" data-icon="home" data-iconshadow="false" data-shadow="false">Home</a>
+        <h2>Classes</h2>
+    </div>
+    <div data-role="content" id="scheduleContent">
+        <ul data-role="listview" id="locationView1" data-inset="true">
+            <li data-role="list-divider">Location</li>
+            <li><a href="#schedulePage">Clubville</a></li>
+        </ul>
+    </div>
+</div>
+
+<div data-role="page" id="classePage">
+    <div data-role="header" data-position="fixed">
+        <a href="#locationPage" data-icon="back" data-iconshadow="false" data-shadow="false">Back</a>
+        <a href="#homePage" data-icon="home" data-iconshadow="false" data-shadow="false">Home</a>
+        <h2>Classes</h2>
+    </div>
+    <div data-role="content" id="classContent">
+        <ul data-role="listview" id="locationView1" data-inset="true">
+            <li data-role="list-divider">Location</li>
+            <li><a href="#schedulePage">Clubville</a></li>
+        </ul>
+    </div>
+</div>
+
+<script>
+
+
+
+//    $('#loginForm').submit(function() {
+//
+//        alert("form submitted");
+//        var vUsername = $('#username').val();
+//        var vPassword = $('#password').val();
+//
+//        var creds = {"username" : "155indiran@gmail.com", "password" : "Vinu@2415"};
+
+//        var url = 'http://192.168.1.2:8080/slicestudio/client/validateLogin';
+//
+//        $.ajax({
+//            type: 'POST',
+//            url: url,
+//            data: JSON.stringify(creds),
+//            contentType: "application/json",
+//            cache: false,
+//            crossDomain: true,
+//            async: false,
+//            headers: {
+//                Accept : 'application/text'
+//            },
+//            success: function(data) {
+//                if(data.toString() == "true") {
+//                    $.mobile.changePage($("#homePage"), { transition: "pop"});
+//                }
+//            },
+//            error: function(xhr) {
+//                alert('Error!  Status = ' + xhr.status + " Message = " + xhr.statusText);
+//            }
+//        });
+
+//        var url = 'http://127.0.0.1:8080/slicestudio/class/today';
+//
+//        $.ajax({
+//            type: 'GET',
+//            url: url,
+//            cache: false,
+//            crossDomain: true,
+//            async: false,
+//            headers: {
+//                Accept : 'application/xml'
+//            },
+//            success: function(data) {
+//                var classList = '<ul data-role="listview" id="classView" data-inset="true">';
+//                $(data).find('GetClassesResponse').
+//                        find('GetClassesResult').
+//                        find('Classes').
+//                        find('Class').
+//                        each(function() {
+//                            var classDes = '<li>' +
+//                                    '           <a href="#">' +
+//                                                   '<h2>' + $(this).find('ClassDescription').children('Name').text() +'</h2>' +
+//                                                   '<p class="ui-li-aside"><strong>'+ $(this).children('StartDateTime').text() +'</strong></p>' +
+//                                                   '</a>' +
+//                                           '</li>';
+//                            classList = classList.concat(classDes);
+//                        });
+//                classList.concat('</ul>');
+//                $("div#scheduleContent").html(classList);
+//                $.mobile.changePage($("#homePage"), { transition: "pop"})
+//            },
+//            error: function(xhr) {
+//                alert('Error!  Status = ' + xhr.status + " Message = " + xhr.statusText);
+//            }
+//        });
+//        return false;
+//    });
+</script>
+</body>
+</html>
+
+<!--$.ajax({-->
+<!--type:     "GET",-->
+<!--url:      "https://graph.facebook.com/10150232496792613",-->
+<!--dataType: "jsonp",-->
+<!--success: function(data){-->
+<!--console.log(data);-->
+<!--}-->
+<!--});-->
