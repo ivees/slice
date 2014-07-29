@@ -28,7 +28,7 @@
     <script src=http://maps.googleapis.com/maps/api/js?libraries=geometry&sensor=false></script>
     <script type="text/javascript" src="js/jquery-1.9.1.js"></script>
     <script type="text/javascript" src="js/jquery.mobile-1.4.2.js"></script>
-    <!--<script type="text/javascript" src="cordova.js"></script>-->
+    <script type="text/javascript" src="cordova.js"></script>
 
     <style type="text/css">
         #bar {
@@ -103,6 +103,34 @@
         }
     </style>
     <script type="text/javascript">
+    	document.addEventListener("deviceready", onDeviceReady, false);
+
+        function onDeviceReady() {
+			checkConnection();
+            //checkPreAuth();
+        }
+    
+    	function checkConnection() {
+	    	if(navigator.network.connection.type == Connection.NONE){
+	    		showNoConnectivityAlert();
+	        	// alert("No Internet Connectivity. Come back after reconnecting.");
+	        }
+        }
+        
+        function showNoConnectivityAlert() {
+        	navigator.notification.alert(
+	            'No Internet Connectivity. Come back after reconnecting.',  // message
+	            alertDismissed,         // callback
+	            'Internet Connectivity Error',            // title
+	            'OK'                  // buttonName
+        	);
+    	}
+    	
+    	// alert dialog dismissed
+        function alertDismissed() {
+            navigator.app.exitApp();
+        }
+    
         $( document ).bind( "mobileinit", function() {
             // Make your jQuery Mobile framework configuration changes here!
             $.support.cors = true;
